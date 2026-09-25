@@ -27,7 +27,6 @@
             appId: "1:1234567890:web:abcdef"
         };
 
-        // فائر بیس انیشلائزیشن
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
@@ -69,7 +68,7 @@
             <div>
                 <div class="flex items-center gap-2">
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-white">فیکٹری پروفیشنل لائیو کھاتا سسٹم</h1>
-                    <span class="bg-emerald-500 text-slate-950 font-bold text-xs px-2.5 py-0.5 rounded">PRO SECURE V3</span>
+                    <span class="bg-emerald-500 text-slate-950 font-bold text-xs px-2.5 py-0.5 rounded">PRO BUGFIXED V4</span>
                 </div>
                 <p class="text-slate-400 text-xs mt-1" id="welcome-user">لاگ ان صارف: --</p>
             </div>
@@ -234,10 +233,14 @@
         let autoBackup = JSON.parse(localStorage.getItem('factory_auto_backup')) || [];
 
         window.onload = function() {
-            if (currentUser) {
+            // سیشن چیک کریں: اگر یوزر لاگ ان نہیں ہے تو لاگ ان سکرین دکھائیں ورنہ ایپ
+            if (currentUser && currentUser.trim() !== "") {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 document.getElementById('welcome-user').innerText = "لاگ ان صارف: " + currentUser;
+            } else {
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('app-screen').classList.add('hidden');
             }
             initCloudSync();
         }
@@ -348,6 +351,10 @@
             let remaining = total - paid;
             let currentDate = new Date().toLocaleString('ur-PK', { timeZone: 'Asia/Karachi' });
 
+            if (!currentUser) {
+                currentUser = "مینیجر / اونر";
+            }
+
             if (!partyName || total <= 0) {
                 alert("براہ کرم پارٹی کا نام اور کل رقم لازمی درج کریں۔");
                 return;
@@ -374,7 +381,7 @@
             } else {
                 let newRef = db.ref('factory_enterprise_v8_khatas').push();
                 newRef.set(khataData).then(() => {
-                    alert("نیا کھاتہ کامیابی سے محفوظ ہو گیا!");
+                    alert("نیا کھاتہ کامیابی سے کلاؤڈ پر محفوظ ہو گیا!");
                     clearForm();
                 });
             }
@@ -436,7 +443,7 @@
                             ${Number(data.remaining).toLocaleString()} روپیہ
                         </span>
                     </td>
-                    <td class="p-3 text-indigo-300 font-semibold text-xs">${data.user}</td>
+                    <td class="p-3 text-indigo-300 font-semibold text-xs">${data.user || 'اونر'}</td>
                     <td class="p-3 text-center space-x-1 space-x-reverse">
                         <button onclick="editKhata('${data.cloudId}')" class="bg-amber-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-amber-500 transition">ایڈٹ ✏️</button>
                         <button onclick="deleteKhata('${data.cloudId}')" class="bg-rose-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-rose-500 transition">حذف 🗑️</button>
@@ -495,7 +502,7 @@
                         <td class="p-2 font-bold text-white">${b.partyName} (${b.marketName || ''})</td>
                         <td class="p-2 text-rose-400">${Number(b.remaining).toLocaleString()} روپیہ</td>
                         <td class="p-2 text-indigo-300">${b.user}</td>
-                        <td class="p-2 text-center"><button onclick="restoreKhata(${b.id})" class="bg-emerald-600 text-white px-2 py-0.5 rounded text-xs">ریسٹور 🔄</button></td>
+                        <td class="p-2 text-center"><button onclick="restoreKhata(${b.id})" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-emerald-500 transition">ریسٹور 🔄</button></td>
                     </tr>`;
                 });
             }
@@ -507,9 +514,21 @@
         function restoreKhata(id) {
             let itemToRestore = autoBackup.find(b => b.id === id);
             if (itemToRestore) {
+                let cleanData = {
+                    id: itemToRestore.id,
+                    date: itemToRestore.date,
+                    partyName: itemToRestore.partyName,
+                    marketName: itemToRestore.marketName || 'جنرل مارکیٹ',
+                    city: itemToRestore.city,
+                    phone: itemToRestore.phone,
+                    total: itemToRestore.total,
+                    paid: itemToRestore.paid,
+                    remaining: itemToRestore.remaining,
+                    user: currentUser || itemToRestore.user || 'ریسٹور صارف'
+                };
                 let newRef = db.ref('factory_enterprise_v8_khatas').push();
-                newRef.set(itemToRestore).then(() => {
-                    alert(`"${itemToRestore.partyName}" کا کھاتا کامیابی سے ریسٹور ہو گیا!`);
+                newRef.set(cleanData).then(() => {
+                    alert(`"${itemToRestore.partyName}" کا کھاتا کامیابی سے مین سکرین پر ریسٹور ہو گیا!`);
                     closeBackupModal();
                 });
             }
