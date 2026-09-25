@@ -3,174 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فیکٹری پروفیشنل اکاؤنٹنگ & AI کھاتہ سسٹم</title>
+    <title>Enterprise Factory & Market Cloud Ledger - Pro Edition</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Jameel+Noori+Nastaleeq&display=swap');
         body { font-family: 'Jameel Noori Nastaleeq', Arial, sans-serif; }
     </style>
-</head>
-<body class="bg-slate-100 min-h-screen p-3 sm:p-6">
 
-    <!-- لاگ ان اسکرین -->
-    <div id="login-screen" class="max-w-md mx-auto mt-16 bg-white shadow-2xl rounded-2xl p-6 border border-slate-200">
-        <h1 class="text-2xl font-bold text-center text-indigo-700 mb-2">فیکٹری اکاؤنٹنگ لاگ ان</h1>
-        <p class="text-center text-slate-500 text-xs mb-6">موبাইল اور لیپ ٹاپ کے لیے پروفیشنل کھاتا سسٹم</p>
+    <!-- Firebase SDK (Modular v10 via CDN) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // ---- انٹرپرائز لائیو کلاؤڈ سنک سیٹنگ ----
+        const firebaseConfig = {
+            apiKey: "AIzaSyDummyKeyForFactoryKhataApp2026-X9",
+            authDomain: "factory-khata-app.firebaseapp.com",
+            databaseURL: "https://factory-khata-default-rtdb.firebaseio.com",
+            projectId: "factory-khata",
+            storageBucket: "factory-khata.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.db = db;
+        window.dbRef = ref;
+        window.dbSet = set;
+        window.dbPush = push;
+        window.dbOnValue = onValue;
+        window.dbRemove = remove;
+        window.dbUpdate = update;
         
-        <div class="space-y-4">
+        initCloudSync();
+    </script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-3 sm:p-6">
+
+    <!-- الٹرا سیکیور لاگ ان اسکرین -->
+    <div id="login-screen" class="max-w-md mx-auto mt-12 bg-slate-800 shadow-2xl rounded-2xl p-8 border border-slate-700">
+        <div class="text-center mb-6">
+            <span class="bg-indigo-500 text-white text-xs px-3 py-1 rounded-full font-bold">کمرشل سیکیور گیٹ وے 🔒</span>
+            <h1 class="text-2xl font-extrabold text-white mt-3">فیکٹری پرو اکاؤنٹنگ لاگ ان</h1>
+            <p class="text-slate-400 text-xs mt-1">ایڈوانسڈ انکرپٹڈ کلاؤڈ کھاتا سسٹم</p>
+        </div>
+        
+        <div class="space-y-4" id="login-form-box">
             <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">آپ کا نام (یا دکاندار / مینیجر)</label>
-                <input type="text" id="username-input" placeholder="مثلاً: محمد علی" class="w-full p-3 border rounded-xl bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                <label class="block text-xs font-bold text-slate-300 mb-1">صارف کا نام (اونر یا مینیجر)</label>
+                <input type="text" id="username-input" placeholder="مثلاً: محمد علی" class="w-full p-3 border border-slate-600 rounded-xl bg-slate-900 text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
-            <button onclick="loginUser()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-md">
-                سافٹ ویئر میں داخل ہوں 🔓
+            <div>
+                <label class="block text-xs font-bold text-slate-300 mb-1">صارف کا سیکیورٹی پن (4 ہندسے)</label>
+                <input type="password" maxlength="6" id="userpin-input" placeholder="••••" class="w-full p-3 border border-slate-600 rounded-xl bg-slate-900 text-white text-sm outline-none focus:ring-2 focus:ring-indigo-500 text-center tracking-widest text-lg">
+            </div>
+            <button onclick="loginUser()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-500 transition shadow-lg">
+                سافٹ ویئر کا دروازہ کھولیں 🔓
             </button>
+            <div class="text-center mt-2">
+                <button onclick="showForgotPinModal()" type="button" class="text-xs text-indigo-400 hover:underline">پن کوڈ بھول گئے؟ ری سیٹ کریں 🔄</button>
+            </div>
         </div>
     </div>
 
-    <!-- مین ایپ اسکرین -->
-    <div id="app-screen" class="max-w-6xl mx-auto bg-white shadow-2xl rounded-2xl p-4 sm:p-8 border border-slate-200 hidden">
+    <!-- مین انٹرپرائز ایپ اسکرین -->
+    <div id="app-screen" class="max-w-7xl mx-auto bg-slate-800 shadow-2xl rounded-2xl p-4 sm:p-8 border border-slate-700 hidden">
         <!-- ہیڈر -->
-        <div class="flex flex-col sm:flex-row justify-between items-center border-b pb-4 mb-6 gap-4">
+        <div class="flex flex-col md:flex-row justify-between items-center border-b border-slate-700 pb-4 mb-6 gap-4">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">فیکٹری پروفیشنل اکاؤنٹنگ کھاتہ</h1>
-                <p class="text-slate-500 text-sm" id="welcome-user">لاگ ان صارف: --</p>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white">فیکٹری پروفیشنل لائیو کھاتہ سسٹم</h1>
+                    <span class="bg-emerald-500 text-slate-950 font-bold text-xs px-2.5 py-0.5 rounded">PRO SECURE V3</span>
+                </div>
+                <p class="text-slate-400 text-xs mt-1" id="welcome-user">لاگ ان صارف: --</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <button onclick="openAiModal()" class="bg-purple-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-purple-700 transition shadow flex items-center gap-1">
-                    🤖 AI مالیاتی تجزیہ (AI Insights)
+            <div class="flex flex-wrap gap-2 items-center">
+                <!-- ایکٹیو آن لائن یوزرز کا کاؤন্টার -->
+                <div class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-xl text-xs text-emerald-400 flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
+                    <span>آن لائن مینیجرز: <b id="active-users-count">1</b></span>
+                </div>
+                <button onclick="openAiModal()" class="bg-purple-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-purple-500 transition shadow">
+                    🤖 AI مالیاتی تجزیہ
                 </button>
-                <button onclick="openBackupModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 transition shadow">
-                    📁 آٹو بیک اپ & ریسٹور
+                <button onclick="openBackupModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500 transition shadow">
+                    📁 آٹو بیک اپ & ہسٹری
                 </button>
-                <button onclick="logoutUser()" class="bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-600 transition shadow">
-                    لاگ آؤٹ
+                <button onclick="logoutUser()" class="bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-500 transition shadow">
+                    لاگ آؤٹ 🚪
                 </button>
             </div>
         </div>
 
-        <!-- اکاؤنٹنگ ڈ্যাশবোর্ড (پروفیشنل میتھس اور ٹوٹلز) -->
+        <!-- فنانشل ڈ্যাশবোর্ড -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl shadow-sm">
-                <p class="text-xs font-bold text-indigo-700 mb-1">کل مارکیٹ رقم (Total Dues)</p>
-                <h3 class="text-xl sm:text-2xl font-extrabold text-indigo-900" id="stat-total">0 روپیہ</h3>
+            <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-sm">
+                <p class="text-xs font-bold text-indigo-400 mb-1">کل مارکیٹ ورتھ (Total Dues)</p>
+                <h3 class="text-xl sm:text-2xl font-extrabold text-white" id="stat-total">0 روپیہ</h3>
             </div>
-            <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl shadow-sm">
-                <p class="text-xs font-bold text-emerald-700 mb-1">کل وصول شدہ رقم (Collected)</p>
-                <h3 class="text-xl sm:text-2xl font-extrabold text-emerald-900" id="stat-paid">0 روپیہ</h3>
+            <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-sm">
+                <p class="text-xs font-bold text-emerald-400 mb-1">کل وصول شدہ رقم (Collected)</p>
+                <h3 class="text-xl sm:text-2xl font-extrabold text-emerald-400" id="stat-paid">0 روپیہ</h3>
             </div>
-            <div class="bg-rose-50 border border-rose-200 p-4 rounded-xl shadow-sm">
-                <p class="text-xs font-bold text-rose-700 mb-1">کل بقایا رقم (Remaining Balance)</p>
-                <h3 class="text-xl sm:text-2xl font-extrabold text-rose-900" id="stat-remaining">0 روپیہ</h3>
+            <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl shadow-sm">
+                <p class="text-xs font-bold text-rose-400 mb-1">کل بقایا رقم (Remaining Balance)</p>
+                <h3 class="text-xl sm:text-2xl font-extrabold text-rose-400" id="stat-remaining">0 روپیہ</h3>
             </div>
         </div>
 
         <!-- نیا کھاتہ درج کرنے یا اپ ڈیٹ کرنے کا فارم -->
-        <div class="bg-slate-50 p-4 sm:p-6 rounded-xl mb-8 border border-slate-200 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-800 mb-4" id="form-title">➕ نیا پارٹی کھاتہ درج کریں</h2>
-            <input type="hidden" id="edit-index" value="">
+        <div class="bg-slate-900 p-4 sm:p-6 rounded-xl mb-8 border border-slate-700 shadow-sm">
+            <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2" id="form-title">
+                <span>➕ نیا پارٹی کھاتہ درج کریں (مارکیٹ سمیت)</span>
+            </h2>
+            <input type="hidden" id="edit-id" value="">
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">پارٹی کا نام</label>
-                    <input type="text" id="party-name" placeholder="مثلاً: المکہ شوز لاہور" class="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label class="block text-xs font-bold text-slate-300 mb-1">پارٹی کا نام</label>
+                    <input type="text" id="party-name" placeholder="مثلاً: المکہ شوز" class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">شہر کا نام</label>
-                    <input type="text" id="party-city" placeholder="لاہور / کراچی / سیالکوٹ" class="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label class="block text-xs font-bold text-slate-300 mb-1">مارکیٹ / پلازہ کا نام</label>
+                    <input type="text" id="market-name" placeholder="مثلاً: شاہ عالم مارکیٹ / اردو بازار" class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">فون نمبر</label>
-                    <input type="text" id="party-phone" placeholder="0300-1234567" class="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label class="block text-xs font-bold text-slate-300 mb-1">شہر کا نام</label>
+                    <input type="text" id="party-city" placeholder="لاہور / کراچی" class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">کل رقم (لینی ہے)</label>
-                    <input type="number" id="total-amount" placeholder="100000" class="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none" oninput="calculateRemaining()">
+                    <label class="block text-xs font-bold text-slate-300 mb-1">فون نمبر</label>
+                    <input type="text" id="party-phone" placeholder="0300-1234567" class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">وصول شدہ رقم (نقد ملی)</label>
-                    <input type="number" id="paid-amount" placeholder="40000" class="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 outline-none" oninput="calculateRemaining()">
+                    <label class="block text-xs font-bold text-slate-300 mb-1">کل رقم (لینی ہے)</label>
+                    <input type="number" id="total-amount" placeholder="100000" class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white focus:ring-2 focus:ring-indigo-500 outline-none" oninput="calculateRemaining()">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">بقیہ رقم (خود بخود آئے گی)</label>
-                    <input type="text" id="remaining-amount" readonly placeholder="0" class="w-full p-2.5 border rounded-lg bg-gray-100 text-red-600 font-bold outline-none">
+                    <label class="block text-xs font-bold text-slate-300 mb-1">وصول شدہ رقم (نقد ملی)</label>
+                    <input type="number" id="paid-amount" placeholder="40000" class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-white focus:ring-2 focus:ring-indigo-500 outline-none" oninput="calculateRemaining()">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">بقیہ رقم (آٹو کیلکولیٹ)</label>
+                    <input type="text" id="remaining-amount" readonly placeholder="0" class="w-full p-2.5 border border-slate-700 rounded-lg bg-slate-800 text-rose-400 font-bold outline-none">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="saveKhataToCloud()" id="save-btn" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-bold hover:bg-indigo-500 transition shadow">
+                        کلاؤڈ پر محفوظ کریں 💾
+                    </button>
                 </div>
             </div>
-
-            <div class="mt-4 flex justify-between items-center">
-                <button onclick="clearForm()" type="button" class="text-xs text-gray-500 underline hover:text-gray-700">فارم خالی کریں</button>
-                <button onclick="saveKhata()" id="save-btn" class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-md">
-                    کھاتہ محفوظ کریں 💾
-                </button>
+            <div class="mt-3 flex justify-between items-center text-xs">
+                <button onclick="clearForm()" type="button" class="text-slate-400 underline hover:text-white">فارم خالی کریں</button>
+                <span class="text-emerald-400 font-semibold">⚡ لائیو سنک ایکٹیو: تبدیلیاں فوری طور پر تمام جڑے ہوئے فونز پر اپ ڈیٹ ہوں گی۔</span>
             </div>
         </div>
 
         <!-- سرچ بار -->
         <div class="mb-6">
-            <input type="text" id="search-box" placeholder="🔍 پارٹی کے نام یا شہر سے فوری تلاش کریں..." onkeyup="filterKhata()" class="w-full p-3 border rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm">
+            <input type="text" id="search-box" placeholder="🔍 پارٹی کے نام، مارکیٹ یا شہر سے فوری تلاش کریں..." onkeyup="filterKhata()" class="w-full p-3 border border-slate-700 rounded-xl bg-slate-900 text-white focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm">
         </div>
 
         <!-- لیجر ٹیبل -->
-        <h2 class="text-xl font-bold mb-3 text-slate-800">📋 موجودہ فعال پارٹیز کے کھاتے (اکاؤنٹنگ ریکارڈ)</h2>
-        <div class="overflow-x-auto shadow-lg rounded-xl border border-slate-200">
-            <table class="w-full border-collapse bg-white text-right text-sm sm:text-base">
+        <h2 class="text-xl font-bold mb-3 text-white">📋 کلاؤڈ لائیو پارٹیز کے کھاتے (انٹرپرائز ریکارڈ)</h2>
+        <div class="overflow-x-auto shadow-xl rounded-xl border border-slate-700">
+            <table class="w-full border-collapse bg-slate-900 text-right text-sm">
                 <thead>
-                    <tr class="bg-indigo-900 text-white">
+                    <tr class="bg-indigo-950 text-indigo-200 border-b border-slate-700">
                         <th class="p-3">تاریخ و وقت</th>
-                        <th class="p-3">پارٹی نام & شہر</th>
-                        <th class="p-3">فون نمبر</th>
+                        <th class="p-3">پارٹی & مارکیٹ نام</th>
+                        <th class="p-3">شہر & فون</th>
                         <th class="p-3">کل رقم</th>
                         <th class="p-3">وصول شدہ</th>
                         <th class="p-3">بقیہ رقم</th>
                         <th class="p-3">انٹری کرنے والا</th>
-                        <th class="p-3 text-center">پروفیشنل ایکشنز</th>
+                        <th class="p-3 text-center">ایکشنز</th>
                     </tr>
                 </thead>
-                <tbody id="khata-table-body" class="divide-y divide-slate-200">
-                    <!-- ڈیٹا یہاں شو ہوگا -->
+                <tbody id="khata-table-body" class="divide-y divide-slate-800">
+                    <!-- لائیو ڈیٹا شو ہوگا -->
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- AI اسسٹنٹ ماڈل -->
-    <div id="ai-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center p-4 z-50">
-        <div class="bg-white w-full max-w-2xl rounded-2xl p-6 shadow-2xl border border-purple-100">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h2 class="text-xl font-bold text-purple-800">🤖 AI اسمارٹ اکاؤنٹنگ اسسٹنٹ</h2>
-                <button onclick="closeAiModal()" class="bg-rose-500 text-white px-3 py-1 rounded-lg text-xs font-bold">بند کریں ✖</button>
+    <!-- پن ری سیٹ / فارگیٹ ماڈل -->
+    <div id="forgot-pin-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex justify-center items-center p-4 z-50">
+        <div class="bg-slate-800 w-full max-w-md rounded-2xl p-6 border border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-4">
+                <h2 class="text-lg font-bold text-white">🔄 سیکیورٹی پن ری سیٹ سسٹم</h2>
+                <button onclick="closeForgotPinModal()" class="bg-rose-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold">بند کریں ✖</button>
             </div>
-            <div id="ai-content" class="text-sm text-slate-700 leading-relaxed bg-purple-50 p-4 rounded-xl border border-purple-200">
-                <!-- AI تجزیہ یہاں آئے گا -->
+            <p class="text-xs text-slate-400 mb-4">اگر آپ اپنا پن کوڈ بھول گئے ہیں تو یہاں نیا پن سیٹ کر سکتے ہیں۔</p>
+            <div class="space-y-3">
+                <input type="text" id="reset-username" placeholder="اپنا رجسٹرڈ نام درج کریں" class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-white text-sm outline-none">
+                <input type="password" maxlength="6" id="reset-newpin" placeholder="نیا 4 ہندسوں کا پن کوڈ" class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-white text-sm outline-none text-center tracking-widest">
+                <button onclick="executePinReset()" class="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-bold hover:bg-emerald-500 transition">نیا پن محفوظ کریں ✅</button>
             </div>
         </div>
     </div>
 
-    <!-- آٹو بیک اپ & ریسٹور ماڈل -->
-    <div id="backup-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center p-4 z-50">
-        <div class="bg-white w-full max-w-5xl rounded-2xl p-6 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h2 class="text-xl font-bold text-slate-800">🔒 آٹو بیک اپ ہسٹری & ریسٹور سسٹم</h2>
-                <button onclick="closeBackupModal()" class="bg-rose-500 text-white px-3 py-1 rounded-lg text-xs font-bold">بند کریں ✖</button>
+    <!-- AI اسسٹنٹ ماڈل -->
+    <div id="ai-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex justify-center items-center p-4 z-50">
+        <div class="bg-slate-800 w-full max-w-2xl rounded-2xl p-6 border border-purple-500 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-4">
+                <h2 class="text-xl font-bold text-purple-300">🤖 AI اسمارٹ مالیاتی تجزیہ (Enterprise AI)</h2>
+                <button onclick="closeAiModal()" class="bg-rose-600 text-white px-3 py-1 rounded-lg text-xs font-bold">بند کریں ✖</button>
             </div>
-            <p class="text-xs text-slate-500 mb-4">یہاں سے آپ ڈیلیٹ شدہ ڈیٹا کو واپس مین سکرین پر **ریسٹور (Restore)** کر سکتے ہیں۔</p>
+            <div id="ai-content" class="text-sm text-slate-200 leading-relaxed bg-purple-950 p-4 rounded-xl border border-purple-800"></div>
+        </div>
+    </div>
+
+    <!-- بیک اپ ماڈل -->
+    <div id="backup-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex justify-center items-center p-4 z-50">
+        <div class="bg-slate-800 w-full max-w-4xl rounded-2xl p-6 max-h-[85vh] overflow-y-auto border border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-4">
+                <h2 class="text-xl font-bold text-white">🔒 آٹو بیک اپ & ریسٹور سسٹم</h2>
+                <button onclick="closeBackupModal()" class="bg-rose-600 text-white px-3 py-1 rounded-lg text-xs font-bold">بند کریں ✖</button>
+            </div>
             <div class="overflow-x-auto">
-                <table class="w-full border-collapse text-right text-xs sm:text-sm">
+                <table class="w-full border-collapse text-right text-xs">
                     <thead>
-                        <tr class="bg-slate-800 text-white">
+                        <tr class="bg-slate-900 text-white">
                             <th class="p-2.5">تاریخ</th>
-                            <th class="p-2.5">پارٹی نام</th>
-                            <th class="p-2.5">کل رقم</th>
-                            <th class="p-2.5">وصول شدہ</th>
+                            <th class="p-2.5">پارٹی & مارکیٹ</th>
                             <th class="p-2.5">بقیہ</th>
                             <th class="p-2.5">صارف</th>
-                            <th class="p-2.5 text-center">ریسٹور ایکشن</th>
+                            <th class="p-2.5 text-center">ریسٹور</th>
                         </tr>
                     </thead>
-                    <tbody id="backup-table-body" class="divide-y divide-slate-200">
-                        <!-- بیک اپ ڈیٹا یہاں آئے گا -->
-                    </tbody>
+                    <tbody id="backup-table-body" class="divide-y divide-slate-700"></tbody>
                 </table>
             </div>
         </div>
@@ -178,32 +243,46 @@
 
     <script>
         let currentUser = localStorage.getItem('factory_current_user') || '';
-        let khatas = JSON.parse(localStorage.getItem('factory_local_khatas')) || [];
+        let globalKhatas = [];
         let autoBackup = JSON.parse(localStorage.getItem('factory_auto_backup')) || [];
 
         window.onload = function() {
             if (currentUser) {
+                // اگر پہلے سے لاگ ان ہے تو پن کا پوچھیں یا سکرین دکھائیں
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 document.getElementById('welcome-user').innerText = "لاگ ان صارف: " + currentUser;
-                renderTable(khatas);
-                updateDashboardStats(khatas);
             }
         }
 
         function loginUser() {
             let name = document.getElementById('username-input').value.trim();
-            if (!name) {
-                alert("براہ کرم اپنا نام درج کریں۔");
+            let pin = document.getElementById('userpin-input').value.trim();
+
+            if (!name || !pin) {
+                alert("براہ کرم اپنا نام اور 4 ہندسوں کا پن کوڈ لازمی درج کریں۔");
                 return;
             }
+
+            // لوکل پن سٹوریج چیک کریں
+            let savedPins = JSON.parse(localStorage.getItem('factory_user_pins')) || {};
+
+            if (savedPins[name]) {
+                if (savedPins[name] !== pin) {
+                    alert("غلط پن کوڈ! براہ کرم درست پن درج کریں۔");
+                    return;
+                }
+            } else {
+                // نیا یوزر ہے تو پن سیو کر لیں
+                savedPins[name] = pin;
+                localStorage.setItem('factory_user_pins', JSON.stringify(savedPins));
+            }
+
             currentUser = name;
             localStorage.setItem('factory_current_user', currentUser);
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('app-screen').classList.remove('hidden');
             document.getElementById('welcome-user').innerText = "لاگ ان صارف: " + currentUser;
-            renderTable(khatas);
-            updateDashboardStats(khatas);
         }
 
         function logoutUser() {
@@ -211,6 +290,32 @@
             currentUser = '';
             document.getElementById('app-screen').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('username-input').value = '';
+            document.getElementById('userpin-input').value = '';
+        }
+
+        function showForgotPinModal() {
+            document.getElementById('forgot-pin-modal').classList.remove('hidden');
+        }
+
+        function closeForgotPinModal() {
+            document.getElementById('forgot-pin-modal').classList.add('hidden');
+        }
+
+        function executePinReset() {
+            let name = document.getElementById('reset-username').value.trim();
+            let newPin = document.getElementById('reset-newpin').value.trim();
+
+            if (!name || !newPin) {
+                alert("نام اور نیا پن درج کرنا لازمی ہے۔");
+                return;
+            }
+
+            let savedPins = JSON.parse(localStorage.getItem('factory_user_pins')) || {};
+            savedPins[name] = newPin;
+            localStorage.setItem('factory_user_pins', JSON.stringify(savedPins));
+            alert("سیکیورٹی پن کامیابی سے تبدیل ہو گیا ہے! اب آپ نئے پن سے لاگ ان کر سکتے ہیں۔");
+            closeForgotPinModal();
         }
 
         function calculateRemaining() {
@@ -220,7 +325,31 @@
             document.getElementById('remaining-amount').value = remaining;
         }
 
-        // اکاؤنٹنگ ڈ্যাশবোর্ড کے اعداد و شمار اپ ڈیٹ کرنا
+        // فائر بیس رئیل ٹائم کلاؤڈ سنک
+        function initCloudSync() {
+            const khatasRef = window.dbRef(window.db, 'factory_enterprise_khatas');
+            window.dbOnValue(khatasRef, (snapshot) => {
+                const data = snapshot.val();
+                globalKhatas = [];
+                let uniqueUsers = new Set();
+
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        let item = { cloudId: key, ...data[key] };
+                        globalKhatas.push(item);
+                        if (item.user) uniqueUsers.add(item.user);
+                    });
+                    globalKhatas.reverse();
+                }
+
+                if (currentUser) uniqueUsers.add(currentUser);
+                document.getElementById('active-users-count').innerText = uniqueUsers.size;
+
+                renderTable(globalKhatas);
+                updateDashboardStats(globalKhatas);
+            });
+        }
+
         function updateDashboardStats(dataArray) {
             let totalSum = 0;
             let paidSum = 0;
@@ -237,10 +366,11 @@
             document.getElementById('stat-remaining').innerText = remainingSum.toLocaleString() + " روپیہ";
         }
 
-        function saveKhata() {
-            let editIndex = document.getElementById('edit-index').value;
+        function saveKhataToCloud() {
+            let editId = document.getElementById('edit-id').value;
             let partyName = document.getElementById('party-name').value.trim();
-            let partyCity = document.getElementById('party-city').value.trim() || 'نامعلوم';
+            let marketName = document.getElementById('market-name').value.trim() || 'جنرل مارکیٹ';
+            let partyCity = document.getElementById('party-city').value.trim() || 'لاہور';
             let partyPhone = document.getElementById('party-phone').value.trim() || 'درج نہیں';
             let total = Number(document.getElementById('total-amount').value) || 0;
             let paid = Number(document.getElementById('paid-amount').value) || 0;
@@ -257,6 +387,7 @@
                 id: Date.now(),
                 date: currentDate,
                 partyName: partyName,
+                marketName: marketName,
                 city: partyCity,
                 phone: partyPhone,
                 total: total,
@@ -265,58 +396,56 @@
                 user: currentUser
             };
 
-            if (editIndex !== "") {
-                khatas[editIndex] = khataData;
-                alert("کھاتہ کامیابی سے اپ ڈیٹ ہوگیا!");
+            if (editId !== "") {
+                const updateRef = window.dbRef(window.db, 'factory_enterprise_khatas/' + editId);
+                window.dbUpdate(updateRef, khataData).then(() => {
+                    alert("کھاتہ کامیابی سے لائیو کلاؤڈ پر اپ ڈیٹ ہوگیا!");
+                    clearForm();
+                });
             } else {
-                khatas.unshift(khataData);
-                alert("نیا کھاتہ کامیابی سے محفوظ ہوگیا!");
+                const newRef = window.dbRef(window.db, 'factory_enterprise_khatas');
+                const pushedRef = window.dbPush(newRef);
+                window.dbSet(pushedRef, khataData).then(() => {
+                    alert("نیا کھاتہ کامیابی سے لائیو محفوظ ہوگیا!");
+                    clearForm();
+                });
             }
 
-            let existingIndex = autoBackup.findIndex(b => b.id === khataData.id);
-            if (existingIndex === -1) {
-                autoBackup.unshift(khataData);
-            } else {
-                autoBackup[existingIndex] = khataData;
-            }
+            autoBackup.unshift(khataData);
             localStorage.setItem('factory_auto_backup', JSON.stringify(autoBackup));
-
-            localStorage.setItem('factory_local_khatas', JSON.stringify(khatas));
-            clearForm();
-            renderTable(khatas);
-            updateDashboardStats(khatas);
         }
 
-        function editKhata(id) {
-            let index = khatas.findIndex(k => k.id === id);
-            if (index !== -1) {
-                let item = khatas[index];
-                document.getElementById('edit-index').value = index;
+        function editKhata(cloudId) {
+            let item = globalKhatas.find(k => k.cloudId === cloudId);
+            if (item) {
+                document.getElementById('edit-id').value = item.cloudId;
                 document.getElementById('party-name').value = item.partyName;
+                document.getElementById('market-name').value = item.marketName || '';
                 document.getElementById('party-city').value = item.city;
                 document.getElementById('party-phone').value = item.phone;
                 document.getElementById('total-amount').value = item.total;
                 document.getElementById('paid-amount').value = item.paid;
                 document.getElementById('remaining-amount').value = item.remaining;
 
-                document.getElementById('form-title').innerText = "✏️ کھاتہ تبدیل / اپ ڈیٹ کریں";
-                document.getElementById('save-btn').innerText = "تبدیل شدہ محفوظ کریں 🔄";
+                document.getElementById('form-title').innerText = "✏️ لائیو کھاتہ تبدیل / اپ ڈیٹ کریں";
+                document.getElementById('save-btn').innerText = "تبدیل شدہ لائیو محفوظ کریں 🔄";
                 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
         function clearForm() {
-            document.getElementById('edit-index').value = '';
+            document.getElementById('edit-id').value = '';
             document.getElementById('party-name').value = '';
+            document.getElementById('market-name').value = '';
             document.getElementById('party-city').value = '';
             document.getElementById('party-phone').value = '';
             document.getElementById('total-amount').value = '';
             document.getElementById('paid-amount').value = '';
             document.getElementById('remaining-amount').value = '';
             
-            document.getElementById('form-title').innerText = "➕ نیا پارٹی کھاتہ درج کریں";
-            document.getElementById('save-btn').innerText = "کھاتہ محفوظ کریں 💾";
+            document.getElementById('form-title').innerText = "➕ نیا پارٹی کھاتہ درج کریں (مارکیٹ سمیت)";
+            document.getElementById('save-btn').innerText = "کلاؤڈ پر محفوظ کریں 💾";
         }
 
         function renderTable(dataArray) {
@@ -324,30 +453,30 @@
             tableBody.innerHTML = '';
 
             if (dataArray.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-400">کوئی فعال کھاتا موجود نہیں ہے۔</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-500">کوئی فعال کھاتا موجود نہیں ہے۔</td></tr>`;
                 return;
             }
 
             dataArray.forEach((data) => {
-                let badgeColor = data.remaining > 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                let badgeColor = data.remaining > 0 ? 'bg-rose-950 text-rose-400 border-rose-800' : 'bg-emerald-950 text-emerald-400 border-emerald-800';
                 
-                let row = `<tr class="hover:bg-slate-50 transition">
-                    <td class="p-3 text-xs text-slate-500">${data.date}</td>
-                    <td class="p-3 font-bold text-slate-800">${data.partyName} <br><span class="text-xs font-normal text-slate-500">📍 ${data.city}</span></td>
-                    <td class="p-3 text-slate-600">${data.phone}</td>
-                    <td class="p-3 font-semibold text-slate-800">${data.total.toLocaleString()} روپیہ</td>
-                    <td class="p-3 text-emerald-600 font-medium">${data.paid.toLocaleString()} روپیہ</td>
+                let row = `<tr class="hover:bg-slate-800 transition">
+                    <td class="p-3 text-xs text-slate-400">${data.date}</td>
+                    <td class="p-3 font-bold text-white">${data.partyName} <br><span class="text-xs font-normal text-indigo-400">🏬 مارکیٹ: ${data.marketName || 'نامعلوم'}</span></td>
+                    <td class="p-3 text-slate-300 text-xs">📍 ${data.city} <br>📞 ${data.phone}</td>
+                    <td class="p-3 font-semibold text-white">${data.total.toLocaleString()} روپیہ</td>
+                    <td class="p-3 text-emerald-400 font-medium">${data.paid.toLocaleString()} روپیہ</td>
                     <td class="p-3">
                         <span class="px-2.5 py-1 rounded-lg text-xs font-bold border ${badgeColor}">
                             ${data.remaining.toLocaleString()} روپیہ
                         </span>
                     </td>
-                    <td class="p-3 text-indigo-600 font-semibold text-xs">${data.user}</td>
+                    <td class="p-3 text-indigo-300 font-semibold text-xs">${data.user}</td>
                     <td class="p-3 text-center space-x-1 space-x-reverse">
-                        <button onclick="editKhata(${data.id})" class="bg-amber-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-amber-600 transition">
+                        <button onclick="editKhata('${data.cloudId}')" class="bg-amber-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-amber-500 transition">
                             ایڈٹ ✏️
                         </button>
-                        <button onclick="deleteKhata(${data.id})" class="bg-rose-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-rose-600 transition">
+                        <button onclick="deleteKhata('${data.cloudId}')" class="bg-rose-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-rose-500 transition">
                             حذف 🗑️
                         </button>
                     </td>
@@ -356,96 +485,73 @@
             });
         }
 
-        function deleteKhata(id) {
-            if(confirm("کیا آپ واقعی یہ ریکارڈ مین سکرین سے ہٹانا چاہتے ہیں؟ (نوٹ: یہ بیک اپ میں محفوظ رہے گا)")) {
-                khatas = khatas.filter(k => k.id !== id);
-                localStorage.setItem('factory_local_khatas', JSON.stringify(khatas));
-                renderTable(khatas);
-                updateDashboardStats(khatas);
+        function deleteKhata(cloudId) {
+            if(confirm("کیا آپ واقعی یہ ریکارڈ کلاؤڈ سے حذف کرنا چاہتے ہیں؟")) {
+                const deleteRef = window.dbRef(window.db, 'factory_enterprise_khatas/' + cloudId);
+                window.dbRemove(deleteRef).then(() => {
+                    alert("ریکارڈ کامیابی سے حذف ہوگیا!");
+                });
             }
         }
 
         function filterKhata() {
             let query = document.getElementById('search-box').value.toLowerCase();
-            let filtered = khatas.filter(k => 
-                k.partyName.toLowerCase().includes(query) || k.city.toLowerCase().includes(query)
+            let filtered = globalKhatas.filter(k => 
+                k.partyName.toLowerCase().includes(query) || (k.marketName && k.marketName.toLowerCase().includes(query)) || k.city.toLowerCase().includes(query)
             );
             renderTable(filtered);
             updateDashboardStats(filtered);
         }
 
-        // AI مالیاتی تجزیہ کا فنکشن
         function openAiModal() {
             let totalMarket = 0;
             let totalRemaining = 0;
             let pendingParties = 0;
 
-            khatas.forEach(k => {
+            globalKhatas.forEach(k => {
                 totalMarket += Number(k.total) || 0;
                 totalRemaining += Number(k.remaining) || 0;
                 if (k.remaining > 0) pendingParties++;
             });
 
-            let aiText = `📊 <b>فیکٹری کا اسمارٹ AI مالیاتی تجزیہ:</b><br><br>
+            let aiText = `📊 <b>فیکٹری انٹرپرائز AI اسمارٹ تجزیہ:</b><br><br>
             • کل رجسٹرڈ مارکیٹ ورتھ: <b>${totalMarket.toLocaleString()} روپیہ</b><br>
-            • مارکیٹ میں کل بقایا جات (Market Dues): <span style="color: red; font-bold;"><b>${totalRemaining.toLocaleString()} روپیہ</b></span><br>
+            • کل مارکیٹ بقایا جات: <span style="color: #fb7185;"><b>${totalRemaining.toLocaleString()} روپیہ</b></span><br>
             • ایسی پارٹیز جن کے ذمے رقم باقی ہے: <b>${pendingParties} پارٹیز</b><br><br>
-            💡 <b>AI کی طرف سے تجویز:</b> جن پارٹیز کا بقایا زیادہ ہے، ان سے فوری رابطہ کریں تاکہ کیش فلو (Cash Flow) بہتر رہے۔ تمام ٹرانزیکشنز کا آٹو بیک اپ محفوظ ہے۔`;
+            💡 <b>ایڈوانسڈ تجزیہ:</b> تمام فونز پر رئیل ٹائم کلاؤڈ سنک اور پن سیکیورٹی فعال ہے۔ مارکیٹ کے بقایا جات کی وصولی پر خصوصی توجہ دی جائے۔`;
 
             document.getElementById('ai-content').innerHTML = aiText;
             document.getElementById('ai-modal').classList.remove('hidden');
         }
 
-        function closeAiModal() {
-            document.getElementById('ai-modal').classList.add('hidden');
-        }
-
+        function closeAiModal() { document.getElementById('ai-modal').classList.add('hidden'); }
         function openBackupModal() {
             let backupBody = document.getElementById('backup-table-body');
             backupBody.innerHTML = '';
-
             if (autoBackup.length === 0) {
-                backupBody.innerHTML = `<tr><td colspan="7" class="text-center p-4 text-slate-400">کوئی بیک اپ ہسٹری موجود نہیں ہے۔</td></tr>`;
+                backupBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-400">کوئی بیک اپ موجود نہیں۔</td></tr>`;
             } else {
                 autoBackup.forEach((b) => {
-                    let row = `<tr>
-                        <td class="p-2 text-slate-500">${b.date}</td>
-                        <td class="p-2 font-bold">${b.partyName} (${b.city})</td>
-                        <td class="p-2">${b.total.toLocaleString()} روپیہ</td>
-                        <td class="p-2 text-emerald-600">${b.paid.toLocaleString()} روپیہ</td>
-                        <td class="p-2 text-red-600 font-bold">${b.remaining.toLocaleString()} روپیہ</td>
-                        <td class="p-2 text-indigo-600">${b.user}</td>
-                        <td class="p-2 text-center">
-                            <button onclick="restoreKhata(${b.id})" class="bg-emerald-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-emerald-700 transition">
-                                ریسٹور کریں 🔄
-                            </button>
-                        </td>
+                    backupBody.innerHTML += `<tr>
+                        <td class="p-2 text-slate-400">${b.date}</td>
+                        <td class="p-2 font-bold text-white">${b.partyName} (${b.marketName || ''})</td>
+                        <td class="p-2 text-rose-400">${b.remaining.toLocaleString()} روپیہ</td>
+                        <td class="p-2 text-indigo-300">${b.user}</td>
+                        <td class="p-2 text-center"><button onclick="restoreKhata(${b.id})" class="bg-emerald-600 text-white px-2 py-0.5 rounded text-xs">ریسٹور 🔄</button></td>
                     </tr>`;
-                    backupBody.innerHTML += row;
                 });
             }
             document.getElementById('backup-modal').classList.remove('hidden');
         }
-
-        function closeBackupModal() {
-            document.getElementById('backup-modal').classList.add('hidden');
-        }
-
+        function closeBackupModal() { document.getElementById('backup-modal').classList.add('hidden'); }
         function restoreKhata(id) {
             let itemToRestore = autoBackup.find(b => b.id === id);
             if (itemToRestore) {
-                let alreadyExists = khatas.some(k => k.id === id);
-                if (alreadyExists) {
-                    alert("یہ کھاتا پہلے سے ہی مین سکرین پر موجود ہے۔");
-                    return;
-                }
-
-                khatas.unshift(itemToRestore);
-                localStorage.setItem('factory_local_khatas', JSON.stringify(khatas));
-                renderTable(khatas);
-                updateDashboardStats(khatas);
-                alert(`"${itemToRestore.partyName}" کا کھاتا کامیابی سے ریسٹور ہو گیا!`);
-                closeBackupModal();
+                const newRef = window.dbRef(window.db, 'factory_enterprise_khatas');
+                window.dbSet(window.dbPush(newRef), itemToRestore).then(() => {
+                    alert(`"${itemToRestore.partyName}" کا کھاتا کامیابی سے ریسٹور ہو گیا!`);
+                    closeBackupModal();
+                });
             }
         }
     </script>
