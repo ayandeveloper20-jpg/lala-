@@ -21,13 +21,13 @@
     <div id="register-screen" class="max-w-md mx-auto mt-16 bg-white shadow-2xl rounded-3xl p-8 border border-orange-100 hidden">
         <div class="text-center mb-6">
             <div class="w-16 h-16 digi-orange text-white rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg mb-3">📝</div>
-            <h1 class="text-2xl font-extrabold text-orange-600">نیا اکاؤنٹ بنائیں</h1>
+            <h1 class="text-2xl font-extrabold text-orange-600">نیا اکاؤنٹ / ایمپلائی رجسٹریشن</h1>
             <p class="text-slate-400 text-xs mt-1">پہلی بار اپنی معلومات درج کریں</p>
         </div>
         <div class="space-y-4 text-xs">
             <div>
-                <label class="block font-bold text-slate-600 mb-1">آپ کا نام (مثلاً: علی)</label>
-                <input type="text" id="reg-name" placeholder="علی" class="w-full p-3.5 border rounded-xl bg-slate-50 outline-none font-bold text-sm">
+                <label class="block font-bold text-slate-600 mb-1">آپ کا نام (مثلاً: علی یا ہارون)</label>
+                <input type="text" id="reg-name" placeholder="اپنا نام لکھیں" class="w-full p-3.5 border rounded-xl bg-slate-50 outline-none font-bold text-sm">
             </div>
             <div>
                 <label class="block font-bold text-slate-600 mb-1">فون نمبر</label>
@@ -41,7 +41,7 @@
                 رجستر کریں اور لاگ ان ہوں 🔓
             </button>
             <div class="text-center mt-3">
-                <button onclick="showLoginScreen()" class="text-orange-600 text-[11px] underline font-bold">پہلے سے اکاؤنٹ ہے؟ لاگ ان کریں</button>
+                <button onclick="showLoginScreen()" class="text-orange-600 text-[11px] underline font-bold">پہلے سے اکاؤنٹ موجود ہے؟ لاگ ان کریں</button>
             </div>
         </div>
     </div>
@@ -50,7 +50,7 @@
     <div id="login-screen" class="max-w-md mx-auto mt-20 bg-white shadow-2xl rounded-3xl p-8 border border-orange-100 hidden">
         <div class="text-center mb-6">
             <div class="w-16 h-16 digi-orange text-white rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg mb-3">🔑</div>
-            <h1 class="text-2xl font-extrabold text-orange-600">لاگ ان کریں</h1>
+            <h1 class="text-2xl font-extrabold text-orange-600" id="login-header-title">لاگ ان کریں</h1>
             <p class="text-slate-400 text-xs mt-1">اپنا خفیہ پن کوڈ درج کریں</p>
         </div>
         <div class="space-y-4 text-xs">
@@ -59,7 +59,7 @@
                 <input type="password" maxlength="6" id="login-pin" placeholder="••••" class="w-full p-3.5 border rounded-xl bg-slate-50 outline-none text-center tracking-widest text-lg font-bold text-orange-600">
             </div>
             <button onclick="verifyLoginPin()" class="w-full digi-orange text-white py-3.5 rounded-xl font-bold shadow hover:bg-orange-600 transition text-sm">
-                لاگ ان 🔓
+                لاگ ان کریں 🔓
             </button>
             <div class="text-center mt-3">
                 <button onclick="showRegisterScreen()" class="text-orange-600 text-[11px] underline font-bold">نیا اکاؤنٹ بنائیں / سائن اپ</button>
@@ -210,7 +210,7 @@
         </div>
     </div>
 
-    <!-- 👥 ایمپلائیز لسٹ ماڈل (یہاں تمام لاگ ان صارفین کی لسٹ ہوگی، پاسورڈ چھپا ہوگا) -->
+    <!-- 👥 ایمپلائیز لسٹ ماڈل (یہاں تمام رجسٹرڈ ممبران کے نام اور فون شو ہوں گے، پن کوڈ چھپا ہوگا) -->
     <div id="employees-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex justify-center items-center p-4 z-50">
         <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -218,7 +218,7 @@
                 <button onclick="closeEmployeesModal()" class="text-rose-600 font-bold">✖ بند</button>
             </div>
             <div id="employees-list-container" class="space-y-3 overflow-y-auto max-h-[400px] text-xs">
-                <!-- یہاں تمام ایمپلائیز ڈائنامیکلی شو ہوں گے -->
+                <!-- یہاں ایمپلائیز ڈائنامیکلی شو ہوں گے -->
             </div>
             <button onclick="closeEmployeesModal()" class="w-full mt-4 bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold">بند کریں</button>
         </div>
@@ -388,83 +388,106 @@
         let employeesList = [];
 
         window.onload = function() {
-            let savedPin = localStorage.getItem('digikhata_saved_pin');
-            
-            // ہمیشہ کلاؤڈ سے ایمپلائیز کی لسٹ سنک کریں تاکہ سب یوزرز کی لسٹ اپ ڈیٹ رہے
+            // ہمیشہ کلاؤڈ سے ایمپلائیز کی لسٹ سنک رکھیں
             db.ref('universal_employees').on('value', (snapshot) => {
                 let data = snapshot.val();
                 employeesList = data ? Object.values(data) : [];
+                
+                // چیک کریں کہ آیا لوکل اسٹوریج میں سیشن موجود ہے یا نہیں
+                let savedPin = localStorage.getItem('digikhata_saved_pin');
+                if (!savedPin) {
+                    // اگر کوئی ایمپلائیز موجود نہیں ہیں تو رجسٹریشن اسکرین دکھائیں، ورنہ لاگ ان اسکرین
+                    if (employeesList.length === 0) {
+                        document.getElementById('register-screen').classList.remove('hidden');
+                    } else {
+                        document.getElementById('login-screen').classList.remove('hidden');
+                    }
+                } else {
+                    // تصدیق کریں کہ محفوظ شدہ پن اب بھی فائر بیس میں موجود ہے یا نہیں
+                    let found = employeesList.find(e => e.pin === savedPin);
+                    if (found) {
+                        let activeName = found.name;
+                        localStorage.setItem('digikhata_active_user', activeName);
+                        document.getElementById('login-header-title').innerText = "خوش آمدید (" + activeName + ")";
+                        document.getElementById('login-screen').classList.remove('hidden');
+                    } else {
+                        // اگر پن ڈیلیٹ ہوگیا ہو تو رجسٹریشن پر بھیجیں
+                        document.getElementById('register-screen').classList.remove('hidden');
+                    }
+                }
             });
-
-            if (!savedPin) {
-                document.getElementById('setup-screen').classList.remove('hidden');
-            } else {
-                let activeName = localStorage.getItem('digikhata_active_user') || 'صارف';
-                document.getElementById('login-user-title').innerText = "خوش آمدید (" + activeName + ")";
-                document.getElementById('login-screen').classList.remove('hidden');
-            }
         }
 
         function showRegisterScreen() {
             document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('setup-screen').classList.remove('hidden');
+            document.getElementById('register-screen').classList.remove('hidden');
         }
 
         function showLoginScreen() {
-            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('register-screen').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
         }
 
         function registerNewUser() {
-            let name = document.getElementById('setup-name').value.trim();
+            let name = document.getElementById('reg-name').value.trim();
             let phone = document.getElementById('reg-phone').value.trim();
-            let pin = document.getElementById('setup-pin').value.trim();
+            let pin = document.getElementById('reg-pin').value.trim();
             
             if (!name || !phone || !pin || pin.length < 3) {
                 alert("براہ کرم تمام معلومات (نام، فون، پن) درست درج کریں۔");
                 return;
             }
 
-            // ایمپلائی اب کلاؤڈ میں محفوظ ہوگا تاکہ سب کو لسٹ میں دکھے
+            // چیک کریں کہ کیا یہ پن یا نام پہلے سے موجود تو نہیں
+            let existing = employeesList.find(e => e.pin === pin);
+            if (existing) {
+                alert("یہ پن کوڈ پہلے سے استعمال ہو رہا ہے، براہ کرم دوسرا پن کوڈ درج کریں۔");
+                return;
+            }
+
+            let newEmpId = 'emp_' + Date.now();
             let newEmp = {
-                id: 'emp_' + Date.now(),
+                id: newEmpId,
                 name: name,
                 phone: phone,
                 pin: pin
             };
 
-            db.ref('universal_employees/' + newEmp.id).set(newEmp);
+            // فائر بیس پر محفوظ کریں
+            db.ref('universal_employees/' + newEmpId).set(newEmp).then(() => {
+                localStorage.setItem('digikhata_active_user', name);
+                localStorage.setItem('digikhata_saved_pin', pin);
 
-            localStorage.setItem('digikhata_active_user', name);
-            localStorage.setItem('digikhata_saved_pin', pin);
-
-            document.getElementById('setup-screen').classList.add('hidden');
-            document.getElementById('app-screen').classList.remove('hidden');
-            document.getElementById('business-title').innerHTML = name + ' <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">● لائیو سنکڈ</span>';
-            
-            listenToUniversalCloud();
+                document.getElementById('register-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                document.getElementById('business-title').innerHTML = name + ' <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">● لائیو سنکڈ</span>';
+                document.getElementById('current-user-display').innerText = "لاگ ان یوزر: " + name;
+                
+                listenToUniversalCloud();
+            }).catch(err => {
+                alert("رجسٹریشن میں خرابی: " + err.message);
+            });
         }
 
         function verifyLoginPin() {
             let enteredPin = document.getElementById('login-pin').value.trim();
             
-            // چیک کریں کہ کیا یہ پن کسی بھی رجسٹرڈ ایمپلائی سے میچ کرتا ہے
             let matchedEmp = employeesList.find(e => e.pin === enteredPin);
-            let localSavedPin = localStorage.getItem('digikhata_saved_pin');
 
-            if (matchedEmp || enteredPin === localSavedPin) {
-                let userName = matchedEmp ? matchedEmp.name : (localStorage.getItem('digikhata_active_user') || 'صارف');
+            if (matchedEmp) {
+                let userName = matchedEmp.name;
                 localStorage.setItem('digikhata_active_user', userName);
                 localStorage.setItem('digikhata_saved_pin', enteredPin);
 
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
                 document.getElementById('business-title').innerHTML = userName + ' <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">● لائیو سنکڈ</span>';
+                document.getElementById('current-user-display').innerText = "لاگ ان یوزر: " + userName;
                 document.getElementById('login-pin').value = '';
                 
                 listenToUniversalCloud();
             } else {
-                alert("غلط پن کوڈ! یا تو یہ پن رجسٹرڈ نہیں ہے یا غلط ہے۔");
+                alert("غلط پن کوڈ! یہ پن سسٹم میں رجسٹرڈ نہیں ہے۔");
                 document.getElementById('login-pin').value = '';
             }
         }
@@ -472,19 +495,12 @@
         function lockApp() {
             document.getElementById('app-screen').classList.add('hidden');
             document.getElementById('party-ledger-screen').classList.add('hidden');
-            let name = localStorage.getItem('digikhata_active_user') || 'صارف';
-            document.getElementById('login-user-title').innerText = "خوش آمدید (" + name + ")";
+            let activeName = localStorage.getItem('digikhata_active_user') || 'صارف';
+            document.getElementById('login-header-title').innerText = "خوش آمدید (" + activeName + ")";
             document.getElementById('login-screen').classList.remove('hidden');
         }
 
-        function resetAppAccount() {
-            if (confirm("کیا آپ نیا اکاؤنٹ بنانا چاہتے ہیں؟")) {
-                localStorage.clear();
-                window.location.reload();
-            }
-        }
-
-        // 👥 ایمپلائیز لسٹ ماڈل کھولنا (پن کوڈ چھپا ہوا ہوگا)
+        // 👥 ایمپلائیز لسٹ ماڈل کھولنا (نام اور فون شو ہوگا، پن کوڈ خفیہ رہے گا)
         function openEmployeesModal() {
             let container = document.getElementById('employees-list-container');
             container.innerHTML = '';
@@ -494,10 +510,10 @@
             } else {
                 employeesList.forEach(emp => {
                     container.innerHTML += `
-                        <div class="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl flex justify-between items-center">
+                        <div class="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl flex justify-between items-center mb-2">
                             <div>
-                                <h4 class="font-extrabold text-slate-800 text-sm">${emp.name}</h4>
-                                <p class="text-xs text-slate-500">فون: ${emp.phone}</p>
+                                <h4 class="font-extrabold text-slate-800 text-sm">👤 ${emp.name}</h4>
+                                <p class="text-xs text-slate-500">فون نمبر: ${emp.phone}</p>
                             </div>
                             <span class="bg-orange-100 text-orange-700 px-2.5 py-1 rounded-lg text-[10px] font-bold">پن کوڈ: •••• (محفوظ)</span>
                         </div>
@@ -511,7 +527,7 @@
             document.getElementById('employees-modal').classList.add('hidden');
         }
 
-        // ☁️ Universal Cloud Database Real-Time Listener
+        // ☁️ Universal Cloud Database Real-Time Listener (لائیو ڈیٹا سنک)
         function listenToUniversalCloud() {
             db.ref('universal_parties').on('value', (snapshot) => {
                 let data = snapshot.val();
