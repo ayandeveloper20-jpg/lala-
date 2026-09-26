@@ -7,8 +7,8 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDKs for Real-Time Cross-Device Cloud Sync -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Jameel+Noori+Nastaleeq&display=swap');
         body { font-family: 'Jameel Noori Nastaleeq', Arial, sans-serif; background-color: #f8fafc; }
@@ -16,6 +16,12 @@
     </style>
 </head>
 <body class="min-h-screen text-slate-800 pb-12">
+
+    <!-- لوڈنگ اسکرین -->
+    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+        <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-sm font-bold text-slate-700">سسٹم لوڈ ہو رہا ہے، براہ کرم انتظار کریں...</p>
+    </div>
 
     <!-- 1. رجسٹریشن / سائن اپ اسکرین (پہلی بار) -->
     <div id="register-screen" class="max-w-md mx-auto mt-16 bg-white shadow-2xl rounded-3xl p-8 border border-orange-100 hidden">
@@ -210,7 +216,7 @@
         </div>
     </div>
 
-    <!-- 👥 ایمپلائیز لسٹ ماڈل (یہاں تمام رجسٹرڈ ممبران کے نام اور فون شو ہوں گے، پن کوڈ چھپا ہوگا) -->
+    <!-- 👥 ایمپلائیز لسٹ ماڈل -->
     <div id="employees-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex justify-center items-center p-4 z-50">
         <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -235,9 +241,7 @@
             <div class="flex justify-center mb-4 bg-slate-50 p-4 rounded-2xl border">
                 <img id="github-qr-img" src="" alt="GitHub QR Code" class="w-48 h-48 object-contain">
             </div>
-            <a id="github-link-anchor" href="https://ayandeveloper20-jpg.github.io/lala-/" target="_blank" class="block text-xs text-orange-600 font-bold underline mb-4">
-                https://ayandeveloper20-jpg.github.io/lala-/
-            </a>
+            <a id="github-link-anchor" href="#" target="_blank" class="block text-xs text-orange-600 font-bold underline mb-4">لنک چیک کریں</a>
             <button onclick="closeQrModal()" class="w-full bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold">بند کریں</button>
         </div>
     </div>
@@ -378,7 +382,10 @@
         const firebaseConfig = {
             databaseURL: "https://digikhata-pro-sync-default-rtdb.firebaseio.com/"
         };
-        firebase.initializeApp(firebaseConfig);
+        // جلوگیری از ارور دپلیکیٹ انیشلائزیشن
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.database();
 
         let currentActivePartyId = null;
@@ -388,33 +395,35 @@
         let employeesList = [];
 
         window.onload = function() {
-            // ہمیشہ کلاؤڈ سے ایمپلائیز کی لسٹ سنک رکھیں
+            // ایمپلائیز کی لسٹ کلاؤڈ سے سنک کریں
             db.ref('universal_employees').on('value', (snapshot) => {
                 let data = snapshot.val();
                 employeesList = data ? Object.values(data) : [];
                 
-                // چیک کریں کہ آیا لوکل اسٹوریج میں سیشن موجود ہے یا نہیں
+                document.getElementById('loading-screen').classList.add('hidden');
+                
                 let savedPin = localStorage.getItem('digikhata_saved_pin');
                 if (!savedPin) {
-                    // اگر کوئی ایمپلائیز موجود نہیں ہیں تو رجسٹریشن اسکرین دکھائیں، ورنہ لاگ ان اسکرین
                     if (employeesList.length === 0) {
                         document.getElementById('register-screen').classList.remove('hidden');
                     } else {
                         document.getElementById('login-screen').classList.remove('hidden');
                     }
                 } else {
-                    // تصدیق کریں کہ محفوظ شدہ پن اب بھی فائر بیس میں موجود ہے یا نہیں
-                    let found = employeesList.find(e => e.pin === savedPin);
-                    if (found) {
-                        let activeName = found.name;
-                        localStorage.setItem('digikhata_active_user', activeName);
-                        document.getElementById('login-header-title').innerText = "خوش آمدید (" + activeName + ")";
+                    let matched = employeesList.find(e => e.pin === savedPin);
+                    if (matched) {
+                        let userName = matched.name;
+                        localStorage.setItem('digikhata_active_user', userName);
+                        document.getElementById('login-header-title').innerText = "خوش آمدید (" + userName + ")";
                         document.getElementById('login-screen').classList.remove('hidden');
                     } else {
-                        // اگر پن ڈیلیٹ ہوگیا ہو تو رجسٹریشن پر بھیجیں
                         document.getElementById('register-screen').classList.remove('hidden');
                     }
                 }
+            }, (error) => {
+                console.error(error);
+                document.getElementById('loading-screen').classList.add('hidden');
+                alert("انٹرنیٹ یا فائر بیس کنکشن میں خرابی ہے۔");
             });
         }
 
@@ -438,7 +447,6 @@
                 return;
             }
 
-            // چیک کریں کہ کیا یہ پن یا نام پہلے سے موجود تو نہیں
             let existing = employeesList.find(e => e.pin === pin);
             if (existing) {
                 alert("یہ پن کوڈ پہلے سے استعمال ہو رہا ہے، براہ کرم دوسرا پن کوڈ درج کریں۔");
@@ -453,7 +461,6 @@
                 pin: pin
             };
 
-            // فائر بیس پر محفوظ کریں
             db.ref('universal_employees/' + newEmpId).set(newEmp).then(() => {
                 localStorage.setItem('digikhata_active_user', name);
                 localStorage.setItem('digikhata_saved_pin', pin);
@@ -471,7 +478,6 @@
 
         function verifyLoginPin() {
             let enteredPin = document.getElementById('login-pin').value.trim();
-            
             let matchedEmp = employeesList.find(e => e.pin === enteredPin);
 
             if (matchedEmp) {
@@ -500,7 +506,7 @@
             document.getElementById('login-screen').classList.remove('hidden');
         }
 
-        // 👥 ایمپلائیز لسٹ ماڈل کھولنا (نام اور فون شو ہوگا، پن کوڈ خفیہ رہے گا)
+        // 👥 ایمپلائیز لسٹ ماڈل
         function openEmployeesModal() {
             let container = document.getElementById('employees-list-container');
             container.innerHTML = '';
@@ -527,7 +533,7 @@
             document.getElementById('employees-modal').classList.add('hidden');
         }
 
-        // ☁️ Universal Cloud Database Real-Time Listener (لائیو ڈیٹا سنک)
+        // ☁️ Universal Cloud Database Real-Time Listener
         function listenToUniversalCloud() {
             db.ref('universal_parties').on('value', (snapshot) => {
                 let data = snapshot.val();
@@ -697,8 +703,11 @@
 
         // QR Code Modal
         function openQrModal() {
-            let githubUrl = "https://ayandeveloper20-jpg.github.io/lala-/";
+            let githubUrl = window.location.href;
             document.getElementById('github-qr-img').src = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + encodeURIComponent(githubUrl);
+            let linkAnchor = document.getElementById('github-link-anchor');
+            linkAnchor.href = githubUrl;
+            linkAnchor.innerText = githubUrl;
             document.getElementById('qr-modal').classList.remove('hidden');
         }
         function closeQrModal() { document.getElementById('qr-modal').classList.add('hidden'); }
@@ -860,6 +869,37 @@
             let party = partiesList.find(x => x.id === partyId);
             party.images.splice(idx, 1);
             syncToUniversalCloud();
+        }
+
+        function filterParties() {
+            let q = document.getElementById('search-box').value.toLowerCase();
+            let container = document.getElementById('parties-list');
+            container.innerHTML = '';
+            let filtered = partiesList.filter(x => x.name.toLowerCase().includes(q));
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 p-6">کوئی کسٹمر نہیں ملا۔</p>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                let bal = getPartyBalance(item);
+                let initial = item.name.charAt(0).toUpperCase();
+                let html = `<div onclick="openPartyLedger('${item.id}')" class="bg-white border border-slate-200 p-3.5 rounded-2xl flex justify-between items-center shadow-sm cursor-pointer hover:border-orange-400 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full digi-orange text-white flex items-center justify-center font-bold text-sm shadow">${initial}</div>
+                        <div>
+                            <h5 class="font-extrabold text-slate-800 text-sm">${item.name} <span class="text-[10px] text-purple-600 font-normal">(${item.addedBy || 'یوزر'})</span></h5>
+                            <p class="text-xs text-slate-400">${item.date} • <span class="text-slate-500">${item.phone}</span></p>
+                        </div>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-sm font-extrabold text-orange-600">Rs ${bal.toLocaleString()}</p>
+                        <p class="text-[10px] text-slate-400 font-semibold text-left">لینا ہے (Receivable)</p>
+                    </div>
+                </div>`;
+                container.innerHTML += html;
+            });
         }
     </script>
 </body>
