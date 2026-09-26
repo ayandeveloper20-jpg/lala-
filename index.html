@@ -20,7 +20,7 @@
     <!-- لوڈنگ اسکرین -->
     <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-sm font-bold text-slate-700">سسٹم لوڈ ہو رہا ہے، براہ کرم انتظار کریں...</p>
+        <p class="text-sm font-bold text-slate-700">لائیو کلاؤڈ سے کنیکٹ ہو رہا ہے، براہ کرم انتظار کریں...</p>
     </div>
 
     <!-- 1. رجسٹریشن / سائن اپ اسکرین (پہلی بار) -->
@@ -32,7 +32,7 @@
         </div>
         <div class="space-y-4 text-xs">
             <div>
-                <label class="block font-bold text-slate-600 mb-1">آپ کا نام (مثلاً: علی یا ہارون)</label>
+                <label class="block font-bold text-slate-600 mb-1">آپ کا نام (مثلاً: علی)</label>
                 <input type="text" id="reg-name" placeholder="اپنا نام لکھیں" class="w-full p-3.5 border rounded-xl bg-slate-50 outline-none font-bold text-sm">
             </div>
             <div>
@@ -380,9 +380,9 @@
     <!-- Firebase Real-Time Cloud Sync & Employees Logic -->
     <script>
         const firebaseConfig = {
-            databaseURL: "https://digikhata-pro-sync-default-rtdb.firebaseio.com/"
+            databaseURL: "https://ayandigi-default-rtdb.firebaseio.com/"
         };
-        // جلوگیری از ارور دپلیکیٹ انیشلائزیشن
+        
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
