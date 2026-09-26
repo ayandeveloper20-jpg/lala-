@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ڈیجی کھاتہ پرو - پن لاک سیکیورٹی سسٹم</title>
+    <title>ڈیجی کھاتہ پرو - یونیورسل لائیو کلاؤڈ سنک سسٹم</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs for Universal Cross-Device Real-Time Cloud Sync -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Jameel+Noori+Nastaleeq&display=swap');
         body { font-family: 'Jameel Noori Nastaleeq', Arial, sans-serif; background-color: #f8fafc; }
@@ -14,34 +17,34 @@
 </head>
 <body class="min-h-screen text-slate-800 pb-12">
 
-    <!-- 🔐 پن کوڈ سیٹ اپ اسکرین (جب پہلی بار آئے گا) -->
+    <!-- 🔐 پن کوڈ سیٹ اپ اسکرین (پہلی بار) -->
     <div id="setup-screen" class="max-w-md mx-auto mt-20 bg-white shadow-2xl rounded-3xl p-8 border border-orange-100 hidden">
         <div class="text-center mb-6">
             <div class="w-16 h-16 digi-orange text-white rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg mb-3">🔒</div>
-            <h1 class="text-2xl font-extrabold text-orange-600">نیا پن کوڈ سیٹ کریں</h1>
-            <p class="text-slate-400 text-xs mt-1">پہلی بار اپنے سافٹ ویئر کے لیے پاسورڈ بنائیں</p>
+            <h1 class="text-2xl font-extrabold text-orange-600">یونیورسل کھاتا سیٹ اپ</h1>
+            <p class="text-slate-400 text-xs mt-1">اپنا نام اور پن کوڈ درج کریں</p>
         </div>
         <div class="space-y-4 text-xs">
             <div>
-                <label class="block font-bold text-slate-600 mb-1">بزنس / شاپ کا نام</label>
-                <input type="text" id="setup-name" placeholder="AliTraders" class="w-full p-3.5 border rounded-xl bg-slate-50 outline-none font-bold text-sm">
+                <label class="block font-bold text-slate-600 mb-1">آپ کا نام (مثلاً: haroon یا ayan)</label>
+                <input type="text" id="setup-name" placeholder="haroon" class="w-full p-3.5 border rounded-xl bg-slate-50 outline-none font-bold text-sm">
             </div>
             <div>
-                <label class="block font-bold text-slate-600 mb-1">نیا پن کوڈ (صرف ہندسے)</label>
+                <label class="block font-bold text-slate-600 mb-1">پن کوڈ (صرف ہندسے)</label>
                 <input type="password" maxlength="6" id="setup-pin" placeholder="••••" class="w-full p-3.5 border rounded-xl bg-slate-50 outline-none text-center tracking-widest text-lg font-bold text-orange-600">
             </div>
-            <button onclick="registerNewPin()" class="w-full digi-orange text-white py-3.5 rounded-xl font-bold shadow hover:bg-orange-600 transition text-sm">
-                پن کوڈ محفوظ کریں اور کھولیں 🔓
+            <button onclick="registerNewUser()" class="w-full digi-orange text-white py-3.5 rounded-xl font-bold shadow hover:bg-orange-600 transition text-sm">
+                سافٹ ویئر شروع کریں 🔓
             </button>
         </div>
     </div>
 
-    <!-- 🔑 لاگ ان / انلاک پن اسکرین (جب پن پہلے سے سیٹ ہو) -->
+    <!-- 🔑 لاگ ان / انلاک پن اسکرین -->
     <div id="login-screen" class="max-w-md mx-auto mt-20 bg-white shadow-2xl rounded-3xl p-8 border border-orange-100 hidden">
         <div class="text-center mb-6">
             <div class="w-16 h-16 digi-orange text-white rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg mb-3">🔑</div>
-            <h1 class="text-2xl font-extrabold text-orange-600" id="login-business-title">ڈیجی کھاتہ پرو</h1>
-            <p class="text-slate-400 text-xs mt-1">سافٹ ویئر کھولنے کے لیے اپنا پن کوڈ درج کریں</p>
+            <h1 class="text-2xl font-extrabold text-orange-600" id="login-user-title">خوش آمدید</h1>
+            <p class="text-slate-400 text-xs mt-1">انلاک کرنے کے لیے پن کوڈ درج کریں</p>
         </div>
         <div class="space-y-4 text-xs">
             <div>
@@ -52,12 +55,12 @@
                 انلاک کریں 🔓
             </button>
             <div class="text-center mt-3">
-                <button onclick="resetAppAccount()" class="text-rose-600 text-[11px] underline font-bold">نیا اکاؤنٹ یا پن ری سیٹ کریں 🔄</button>
+                <button onclick="resetAppAccount()" class="text-rose-600 text-[11px] underline font-bold">اکاؤنٹ تبدیل کریں 🔄</button>
             </div>
         </div>
     </div>
 
-    <!-- مین ڈیش بورڈ (Accounts & Dashboard View) -->
+    <!-- مین ڈیش بورڈ (Universal Live Cloud Accounts) -->
     <div id="app-screen" class="max-w-7xl mx-auto p-3 sm:p-6 hidden">
         
         <!-- ٹاپ ہیڈر -->
@@ -65,8 +68,8 @@
             <div class="flex items-center gap-3">
                 <div class="digi-orange text-white font-bold p-3 rounded-2xl text-xl shadow">📊</div>
                 <div>
-                    <h2 class="text-lg font-extrabold text-slate-800 flex items-center gap-2" id="business-title">AliTraders <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">● سیکیورڈ موڈ</span></h2>
-                    <p class="text-xs text-slate-400">پن لاک فعال ہے 🔒</p>
+                    <h2 class="text-lg font-extrabold text-slate-800 flex items-center gap-2" id="business-title">haroon <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">● لائیو کلاؤڈ سنکڈ</span></h2>
+                    <p class="text-xs text-slate-400">تمام یوزرز کے ساتھ ڈیٹا جڑا ہوا ہے ☁️</p>
                 </div>
             </div>
             <div class="flex flex-wrap gap-2 items-center">
@@ -75,7 +78,7 @@
             </div>
         </div>
 
-        <!-- ڈیش بورڈ اکاؤنٹس سمری (Accounts Total Overview) -->
+        <!-- ڈیش بورڈ اکاؤنٹس سمری -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
                 <div>
@@ -124,8 +127,8 @@
                             <label class="block font-bold text-slate-600 mb-1">بقایا رقم جو لینی ہے (Remaining Balance)</label>
                             <input type="text" id="dash-remaining-amount" readonly placeholder="0" class="w-full p-3 border rounded-xl bg-orange-50 outline-none font-extrabold text-orange-600 text-base">
                         </div>
-                        <button onclick="saveNewParty()" class="w-full digi-orange text-white py-3.5 rounded-xl font-bold shadow hover:bg-orange-600 transition text-sm">
-                            کھاتا محفوظ کریں ✅
+                        <button onclick="saveNewPartyToCloud()" class="w-full digi-orange text-white py-3.5 rounded-xl font-bold shadow hover:bg-orange-600 transition text-sm">
+                            کلاؤڈ پر محفوظ کریں ☁️✅
                         </button>
                     </div>
                 </div>
@@ -134,7 +137,7 @@
             <!-- دائیں طرف: تمام اکاؤنٹس اور کسٹمرز کی لسٹ -->
             <div class="lg:col-span-2 bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col">
                 <div class="flex justify-between items-center mb-4 border-b pb-3">
-                    <h3 class="font-extrabold text-sm text-slate-800">📋 تمام کسٹمرز کے اکاؤنٹس کی لسٹ</h3>
+                    <h3 class="font-extrabold text-sm text-slate-800">📋 تمام کسٹمرز کے اکاؤنٹس کی لسٹ (لائیو سنکڈ)</h3>
                     <input type="text" id="search-box" placeholder="🔍 نام سے تلاش کریں..." onkeyup="filterParties()" class="p-2.5 border rounded-xl text-xs outline-none bg-slate-50 w-48 sm:w-64">
                 </div>
 
@@ -241,8 +244,8 @@
                     <label class="block font-bold text-slate-600 mb-1">باقی رقم (Remaining Balance)</label>
                     <input type="text" id="sub-acc-remaining" readonly class="w-full p-3 border rounded-xl outline-none font-extrabold text-orange-600 text-base bg-orange-50">
                 </div>
-                <button onclick="saveNewSubAccount()" class="w-full digi-orange text-white py-3.5 rounded-xl font-bold shadow hover:bg-orange-600 transition text-sm">
-                    کھاتا محفوظ کریں ✅
+                <button onclick="saveNewSubAccountToCloud()" class="w-full digi-orange text-white py-3.5 rounded-xl font-bold shadow hover:bg-orange-600 transition text-sm">
+                    کلاؤڈ پر محفوظ کریں ☁️✅
                 </button>
             </div>
         </div>
@@ -273,8 +276,8 @@
                     <label class="block font-bold text-slate-600 mb-1">باقی رقم (Remaining Balance)</label>
                     <input type="text" id="edit-txn-remaining" readonly class="w-full p-3 border rounded-xl outline-none font-extrabold text-orange-600 text-base bg-orange-50">
                 </div>
-                <button onclick="saveUpdatedBill()" class="w-full digi-orange text-white py-3.5 rounded-xl font-bold shadow hover:bg-orange-600 transition text-sm">
-                    اپڈیٹ اور محفوظ کریں ✅
+                <button onclick="saveUpdatedBillToCloud()" class="w-full digi-orange text-white py-3.5 rounded-xl font-bold shadow hover:bg-orange-600 transition text-sm">
+                    کلاؤڈ پر اپڈیٹ کریں ☁️✅
                 </button>
             </div>
         </div>
@@ -292,7 +295,7 @@
                 <canvas id="camera-canvas" class="hidden"></canvas>
             </div>
             <button onclick="captureLivePhoto()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs shadow hover:bg-emerald-700 transition">
-                📸 تصویر محفوظ کریں ✅
+                📸 تصویر کلاؤڈ پر محفوظ کریں ✅
             </button>
         </div>
     </div>
@@ -310,7 +313,7 @@
         <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div id="printable-bill" class="bg-slate-50 p-6 rounded-2xl border border-slate-300 text-slate-800 mb-4 text-xs">
                 <div class="text-center border-b pb-3 mb-3">
-                    <h2 class="text-lg font-extrabold text-orange-600" id="bill-business-name">AliTraders</h2>
+                    <h2 class="text-lg font-extrabold text-orange-600" id="bill-business-name">DigiKhata</h2>
                     <p class="text-slate-500">پرافیشنل ڈیجیٹل وصولی رسید (Invoice)</p>
                 </div>
                 <div class="flex justify-between mb-3">
@@ -348,59 +351,67 @@
         </div>
     </div>
 
-    <!-- JavaScript PIN Lock & App Logic -->
+    <!-- Firebase Real-Time Cloud Sync & App Logic -->
     <script>
+        // Firebase Public Realtime Database for Universal Live Sync Across All Users
+        const firebaseConfig = {
+            databaseURL: "https://digikhata-pro-sync-default-rtdb.firebaseio.com/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         let currentActivePartyId = null;
         let selectedBillData = null;
         let mediaStream = null;
         let partiesList = [];
+        let activeUser = localStorage.getItem('digikhata_active_user') || '';
 
         window.onload = function() {
             let savedPin = localStorage.getItem('digikhata_saved_pin');
-            let savedName = localStorage.getItem('digikhata_saved_name') || 'AliTraders';
-
+            
             if (!savedPin) {
-                // پہلی بار جب بندہ آئے گا تو سیٹ اپ اسکرین کھلے گی
                 document.getElementById('setup-screen').classList.remove('hidden');
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.add('hidden');
             } else {
-                // اگلی ہر بار پن لاک اسکرین آئے گی
-                document.getElementById('login-business-title').innerText = savedName;
+                document.getElementById('login-user-title').innerText = "خوش آمدید (" + (localStorage.getItem('digikhata_active_user') || 'صارف') + ")";
                 document.getElementById('setup-screen').classList.add('hidden');
                 document.getElementById('login-screen').classList.remove('hidden');
                 document.getElementById('app-screen').classList.add('hidden');
             }
         }
 
-        function registerNewPin() {
+        function registerNewUser() {
             let name = document.getElementById('setup-name').value.trim();
             let pin = document.getElementById('setup-pin').value.trim();
             if (!name || !pin || pin.length < 3) {
-                alert("براہ کرم شاپ کا نام اور کم از کم 3 ہندسوں کا پن کوڈ درج کریں۔");
+                alert("براہ کرم نام اور کم از کم 3 ہندسوں کا پن کوڈ درج کریں۔");
                 return;
             }
 
-            localStorage.setItem('digikhata_saved_name', name);
+            localStorage.setItem('digikhata_active_user', name);
             localStorage.setItem('digikhata_saved_pin', pin);
+            activeUser = name;
 
             document.getElementById('setup-screen').classList.add('hidden');
             document.getElementById('app-screen').classList.remove('hidden');
-            document.getElementById('business-title').innerHTML = name + ' <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">● سیکیورڈ موڈ</span>';
-            loadParties();
+            document.getElementById('business-title').innerHTML = name + ' <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">● لائیو کلاؤڈ سنکڈ</span>';
+            
+            listenToUniversalCloud();
         }
 
         function verifyLoginPin() {
             let enteredPin = document.getElementById('login-pin').value.trim();
             let savedPin = localStorage.getItem('digikhata_saved_pin');
-            let savedName = localStorage.getItem('digikhata_saved_name') || 'AliTraders';
 
             if (enteredPin === savedPin) {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-screen').classList.remove('hidden');
-                document.getElementById('business-title').innerHTML = savedName + ' <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">● سیکیورڈ موڈ</span>';
+                let name = localStorage.getItem('digikhata_active_user') || 'صارف';
+                document.getElementById('business-title').innerHTML = name + ' <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">● لائیو کلاؤڈ سنکڈ</span>';
                 document.getElementById('login-pin').value = '';
-                loadParties();
+                
+                listenToUniversalCloud();
             } else {
                 alert("غلط پن کوڈ! دوبارہ کوشش کریں۔");
                 document.getElementById('login-pin').value = '';
@@ -410,35 +421,35 @@
         function lockApp() {
             document.getElementById('app-screen').classList.add('hidden');
             document.getElementById('party-ledger-screen').classList.add('hidden');
-            let savedName = localStorage.getItem('digikhata_saved_name') || 'AliTraders';
-            document.getElementById('login-business-title').innerText = savedName;
+            let name = localStorage.getItem('digikhata_active_user') || 'صارف';
+            document.getElementById('login-user-title').innerText = "خوش آمدید (" + name + ")";
             document.getElementById('login-screen').classList.remove('hidden');
         }
 
         function resetAppAccount() {
-            if (confirm("کیا آپ واقعی نیا اکاؤنٹ بنانا اور پرانا پن ری سیٹ کرنا چاہتے ہیں؟")) {
+            if (confirm("کیا آپ واقعی نیا اکاؤنٹ بنانا چاہتے ہیں؟")) {
                 localStorage.removeItem('digikhata_saved_pin');
-                localStorage.removeItem('digikhata_saved_name');
+                localStorage.removeItem('digikhata_active_user');
                 window.location.reload();
             }
         }
 
-        function loadParties() {
-            let savedName = localStorage.getItem('digikhata_saved_name') || 'AliTraders';
-            let key = 'parties_' + savedName.replace(/[^a-zA-Z0-9]/g, '_');
-            let data = localStorage.getItem(key);
-            partiesList = data ? JSON.parse(data) : [];
-            renderDashboard();
-            if (currentActivePartyId) {
-                openPartyLedger(currentActivePartyId, true);
-            }
+        // ☁️ Universal Cloud Database Real-Time Listener (ہارون، ایان اور سب کا ڈیٹا ایک ساتھ جڑے گا)
+        function listenToUniversalCloud() {
+            db.ref('universal_parties').on('value', (snapshot) => {
+                let data = snapshot.val();
+                partiesList = data ? Object.values(data) : [];
+                renderDashboard();
+                if (currentActivePartyId) {
+                    openPartyLedger(currentActivePartyId, true);
+                }
+            });
         }
 
-        function saveParties() {
-            let savedName = localStorage.getItem('digikhata_saved_name') || 'AliTraders';
-            let key = 'parties_' + savedName.replace(/[^a-zA-Z0-9]/g, '_');
-            localStorage.setItem(key, JSON.stringify(partiesList));
-            renderDashboard();
+        function syncToUniversalCloud() {
+            let partiesObj = {};
+            partiesList.forEach(p => { partiesObj[p.id] = p; });
+            db.ref('universal_parties').set(partiesObj);
         }
 
         function calculateDashRemaining() {
@@ -448,7 +459,7 @@
             document.getElementById('dash-remaining-amount').value = rem >= 0 ? rem : 0;
         }
 
-        function saveNewParty() {
+        function saveNewPartyToCloud() {
             let name = document.getElementById('dash-party-name').value.trim();
             let phone = document.getElementById('dash-party-phone').value.trim() || '923000000000';
             let title = document.getElementById('dash-account-title').value.trim() || 'مین بل';
@@ -466,6 +477,7 @@
                 name: name,
                 phone: phone,
                 date: new Date().toLocaleDateString(),
+                addedBy: localStorage.getItem('digikhata_active_user') || 'صارف',
                 images: [],
                 transactions: [
                     {
@@ -480,7 +492,7 @@
             };
 
             partiesList.unshift(newParty);
-            saveParties();
+            syncToUniversalCloud();
 
             document.getElementById('dash-party-name').value = '';
             document.getElementById('dash-party-phone').value = '';
@@ -489,7 +501,7 @@
             document.getElementById('dash-paid-amount').value = '';
             document.getElementById('dash-remaining-amount').value = '';
 
-            alert("کھاتا کامیابی سے محفوظ ہو گیا ہے! ✅");
+            alert("ڈیٹا کلاؤڈ پر محفوظ ہو گیا ہے اور سب کے پاس لائیو سنک ہو گیا ہے! ✅");
         }
 
         function getPartyBalance(party) {
@@ -529,7 +541,7 @@
                             ${initial}
                         </div>
                         <div>
-                            <h5 class="font-extrabold text-slate-800 text-sm">${item.name}</h5>
+                            <h5 class="font-extrabold text-slate-800 text-sm">${item.name} <span class="text-[10px] text-purple-600 font-normal">(${item.addedBy || 'یوزر'})</span></h5>
                             <p class="text-xs text-slate-400">${item.date} • <span class="text-slate-500">${item.phone}</span></p>
                         </div>
                     </div>
@@ -613,7 +625,7 @@
             let rem = total - paid;
             document.getElementById('sub-acc-remaining').value = rem >= 0 ? rem : 0;
         }
-        function saveNewSubAccount() {
+        function saveNewSubAccountToCloud() {
             let title = document.getElementById('sub-acc-title').value.trim() || 'نیا کھاتا';
             let total = Number(document.getElementById('sub-acc-total').value) || 0;
             let paid = Number(document.getElementById('sub-acc-paid').value) || 0;
@@ -636,10 +648,10 @@
             if (!party.transactions) party.transactions = [];
             party.transactions.push(newTxn);
 
-            saveParties();
+            syncToUniversalCloud();
             closeSubAccountModal();
             openPartyLedger(party.id);
-            alert("نیا کھاتا محفوظ ہو گیا ہے! ✅");
+            alert("نیا کھاتا کلاؤڈ پر محفوظ ہو گیا ہے! ✅");
         }
 
         // Edit Bill Modal
@@ -664,7 +676,7 @@
             let rem = total - paid;
             document.getElementById('edit-txn-remaining').value = rem >= 0 ? rem : 0;
         }
-        function saveUpdatedBill() {
+        function saveUpdatedBillToCloud() {
             let txnId = document.getElementById('edit-txn-id').value;
             let desc = document.getElementById('edit-txn-desc').value.trim();
             let total = Number(document.getElementById('edit-txn-total').value) || 0;
@@ -681,10 +693,10 @@
                 txn.paid = paid;
                 txn.remaining = rem >= 0 ? rem : 0;
 
-                saveParties();
+                syncToUniversalCloud();
                 closeEditBillModal();
                 openPartyLedger(party.id);
-                alert("بل کامیابی سے اپڈیٹ ہو گیا ہے! ✅");
+                alert("بل کلاؤڈ پر اپڈیٹ ہو گیا ہے! ✅");
             }
         }
 
@@ -713,8 +725,8 @@
             if (party) {
                 if (!party.images) party.images = [];
                 party.images.push(dataUrl);
-                saveParties();
-                alert("تصویر محفوظ ہو گئی!");
+                syncToUniversalCloud();
+                alert("تصویر کلاؤڈ پر محفوظ ہو گئی!");
             }
             closeLiveCameraModal();
         }
@@ -728,7 +740,7 @@
                 if (party) {
                     if (!party.images) party.images = [];
                     party.images.push(e.target.result);
-                    saveParties();
+                    syncToUniversalCloud();
                     alert("تصویر اپلوڈ ہو گئی!");
                 }
             };
@@ -754,7 +766,7 @@
         function deletePartyImage(partyId, idx) {
             let party = partiesList.find(x => x.id === partyId);
             party.images.splice(idx, 1);
-            saveParties();
+            syncToUniversalCloud();
         }
 
         function generateBill(partyId, txnId) {
@@ -762,8 +774,7 @@
             let txn = party.transactions.find(x => x.id === txnId);
             selectedBillData = { party, txn };
 
-            let savedName = localStorage.getItem('digikhata_saved_name') || 'AliTraders';
-            document.getElementById('bill-business-name').innerText = savedName;
+            document.getElementById('bill-business-name').innerText = "DigiKhata Pro";
             document.getElementById('bill-customer-name').innerText = party.name;
             document.getElementById('bill-customer-phone').innerText = party.phone;
             document.getElementById('bill-date').innerText = txn.date;
@@ -787,9 +798,8 @@
         function downloadBillAsTextFile() {
             if (!selectedBillData) return;
             let { party, txn } = selectedBillData;
-            let savedName = localStorage.getItem('digikhata_saved_name') || 'AliTraders';
             let rem = (Number(txn.total) || 0) - (Number(txn.paid) || 0);
-            let text = `--- INVOICE ---\nShop: ${savedName}\nCustomer: ${party.name}\nAccount: ${txn.desc}\nTotal: Rs ${txn.total}\nPaid: Rs ${txn.paid}\nRemaining: Rs ${rem}\n`;
+            let text = `--- INVOICE ---\nCustomer: ${party.name}\nAccount: ${txn.desc}\nTotal: Rs ${txn.total}\nPaid: Rs ${txn.paid}\nRemaining: Rs ${rem}\n`;
             let blob = new Blob([text], { type: 'text/plain' });
             let l = document.createElement('a');
             l.href = URL.createObjectURL(blob);
@@ -801,9 +811,8 @@
         function sendToWhatsApp() {
             if (!selectedBillData) return;
             let { party, txn } = selectedBillData;
-            let savedName = localStorage.getItem('digikhata_saved_name') || 'AliTraders';
             let rem = (Number(txn.total) || 0) - (Number(txn.paid) || 0);
-            let msg = `*--- رسید (${savedName}) ---*\nکسٹمر: ${party.name}\nکھاتا: ${txn.desc}\nکل بل: Rs ${txn.total}\nوصول کیے: Rs ${txn.paid}\nباقی بقایا لینا ہے: Rs ${rem}\n\nشکریہ!`;
+            let msg = `*--- رسید (ڈیجی کھاتہ) ---*\nکسٹمر: ${party.name}\nکھاتا: ${txn.desc}\nکل بل: Rs ${txn.total}\nوصول کیے: Rs ${txn.paid}\nباقی بقایا لینا ہے: Rs ${rem}\n\nشکریہ!`;
             window.open(`https://wa.me/${party.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
@@ -825,7 +834,7 @@
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full digi-orange text-white flex items-center justify-center font-bold text-sm shadow">${initial}</div>
                         <div>
-                            <h5 class="font-extrabold text-slate-800 text-sm">${item.name}</h5>
+                            <h5 class="font-extrabold text-slate-800 text-sm">${item.name} <span class="text-[10px] text-purple-600 font-normal">(${item.addedBy || 'یوزر'})</span></h5>
                             <p class="text-xs text-slate-400">${item.date} • <span class="text-slate-500">${item.phone}</span></p>
                         </div>
                     </div>
